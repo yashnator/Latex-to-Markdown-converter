@@ -61,6 +61,12 @@ bool yy_is_italic = false;
   return EOL;
 }
 
+<*>[ \n]*"\\hrule"[ \n] {
+  char rule[] = "\n\n---\n\n";
+  yylval.str = strdup(rule);
+  return HRULE;
+}
+
 <BODY,BOLD,ITALICS>[ ]*[\n]{0,1}[ ]* {
   char sp[] = " ";
   yylval.str = strdup(sp);

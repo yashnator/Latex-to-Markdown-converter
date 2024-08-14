@@ -25,6 +25,7 @@ void yyerror(const char* msg) {
 %token <node> BEGIN_DOC END_DOC
 %token <str> WORD SPACE EOL
 %token <node> BOLD_START ITALICS_START BOLD_END ITALICS_END
+%token <str> HRULE
 
 %type <node> doc_body doc_element
 
@@ -80,6 +81,7 @@ raw_italics_text: ITALICS_START { $$ = create_node(italics_text_t); }
 raw_text: WORD
  | EOL
  | SPACE
+ | HRULE
  ;
 
 %%
