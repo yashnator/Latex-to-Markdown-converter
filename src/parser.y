@@ -25,7 +25,7 @@ void yyerror(const char* msg) {
 %token <node> BEGIN_DOC END_DOC
 %token <str> WORD SPACE EOL
 %token <node> BOLD_START ITALICS_START BOLD_END ITALICS_END
-%token <str> HRULE
+%token <str> HRULE PAR
 
 %type <node> doc_body doc_element
 
@@ -82,6 +82,7 @@ raw_text: WORD
  | EOL
  | SPACE
  | HRULE
+ | PAR
  ;
 
 %%
