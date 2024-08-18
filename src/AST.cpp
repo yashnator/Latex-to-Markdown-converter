@@ -5,7 +5,7 @@ struct node_h* create_node(enum node_type_t type, char* val){
     new_node->curr_type = type;
     if(val){
         new_node->value = val;
-    } else if(type == bold_text_t || type == italics_text_t || type == text_t){
+    } else{
         char empty[] = "";
         new_node->value = strdup(empty);
     }
@@ -13,9 +13,6 @@ struct node_h* create_node(enum node_type_t type, char* val){
 }
 
 struct node_h* add_child(struct node_h* parent, struct node_h* child){
-    if(child->curr_type == text_t){
-        // printf("%s", child->value);
-    }
     parent->children.push_back(child);
     return parent;
 }
@@ -37,7 +34,12 @@ void eval_root(char* fname, struct node_h* root){
 }
 
 void eval(std::ofstream &md_file, struct node_h* node){
-    // std::cout << node_type_t(node->curr_type) << std::endl;
+    if(node->curr_type == verbatim_t){
+        md_file << "\n```\n";
+        md_file << node->value;
+        md_file << "```\n";
+        return;
+    }
     if(node->curr_type == text_t){
         md_file << node->value;
     }

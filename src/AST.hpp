@@ -9,7 +9,8 @@ enum node_type_t{
     body_t, 
     text_t,
     bold_text_t,
-    italics_text_t
+    italics_text_t,
+    verbatim_t
 };
 
 struct node_h{

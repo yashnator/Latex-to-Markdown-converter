@@ -23,16 +23,18 @@ void yyerror(const char* msg) {
     char *str;
 }
 %token <node> BEGIN_DOC END_DOC
-%token <str> WORD SPACE EOL
 %token <node> BOLD_START ITALICS_START BOLD_END ITALICS_END
+%token <node> VERBATIM_START VERBATIM_END 
+%token <str> WORD CODE SPACE EOL
 %token <str> HRULE PAR
 
 %type <node> doc_body doc_element
 
+%type <node> code_block
 %type <node> text_element
 %type <node> text bold_text italics_text
 %type <node> raw_bold_text raw_italics_text
-%type <str> raw_text 
+%type <str> raw_text
 %%
 
 doc_body: BEGIN_DOC {
@@ -49,11 +51,9 @@ doc_body: BEGIN_DOC {
  }
  ;
 
-doc_element: text_element { $$ = $1; };
+doc_element: text_element | code_block;
 
-text_element: bold_text { $$ = $1; } 
- | italics_text 
- | text { $$ = $1; };
+text_element: bold_text | italics_text | text ;
 
 /* TEXT */ 
 text: raw_text { $$ = create_node(text_t, $1); }
@@ -77,6 +77,19 @@ raw_italics_text: ITALICS_START { $$ = create_node(italics_text_t); }
  | raw_italics_text bold_text { $$ = add_child($$, $2); }
  | raw_italics_text ITALICS_START { }
  ;
+
+/* Code Block */ 
+
+code_block: VERBATIM_START { $$ = create_node(verbatim_t); }
+ | code_block CODE { 
+    $1->value = strcat($1->value, $2);
+    $$ = $1;
+ }
+ | code_block VERBATIM_END {
+    $$ = $1;
+ }
+
+/* Raw text strings */
 
 raw_text: WORD
  | EOL

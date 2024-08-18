@@ -5,3 +5,7 @@ LATEX specifications used for markdown conversion:
 3. There are no newlines via 1. inside a textbf or textit. We can still use \\.
 
 As seen from latex source code converted to PDF using overleaf.com
+
+Known bugs:
+1. \end{verbatim} on same line as text doesn't work
+2. Arbitrary textbf and textit composition may not work all the time

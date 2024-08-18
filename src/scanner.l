@@ -12,6 +12,7 @@ bool yy_is_italic = false;
 %x BODY
 %x BOLD
 %x ITALICS
+%x VERBATIM
 %%
 
 "\\begin{document}"[ \n]* {
@@ -24,6 +25,27 @@ bool yy_is_italic = false;
 <BODY>[ \n]*"\\end{document}" {
   yy_pop_state();
   return END_DOC;
+}
+
+<BODY>[ \n]*"\\begin{verbatim}"[\n]? {
+  yy_push_state(VERBATIM);
+  return VERBATIM_START;
+}
+
+<VERBATIM>"\\end{verbatim}"[ \n]* {
+  yy_pop_state();
+  return VERBATIM_END;
+}
+
+<VERBATIM>.* {
+  yylval.str = strdup(yytext);
+  return CODE;
+}
+
+<VERBATIM>\n {
+  char nl[] = "\n";
+  yylval.str = strdup(nl);
+  return CODE;
 }
 
 <BODY,BOLD,ITALICS>"\\textbf\{"[ \n]* {
