@@ -24,7 +24,7 @@ void yyerror(const char* msg) {
 }
 %token <node> BEGIN_DOC END_DOC
 %token <node> BOLD_START ITALICS_START BOLD_END ITALICS_END
-%token <node> VERBATIM_START VERBATIM_END 
+%token <node> VERBATIM_START VERBATIM_END
 %token <str> WORD CODE SPACE EOL
 %token <str> HRULE PAR
 

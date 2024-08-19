@@ -36,7 +36,11 @@ void eval_root(char* fname, struct node_h* root){
 void eval(std::ofstream &md_file, struct node_h* node){
     if(node->curr_type == verbatim_t){
         md_file << "\n```\n";
+        int len = strlen(node->value);
         md_file << node->value;
+        if(node->value[len - 1] != '\n'){
+            md_file << "\n";
+        }
         md_file << "```\n";
         return;
     }

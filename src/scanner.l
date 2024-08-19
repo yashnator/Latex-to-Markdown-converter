@@ -37,7 +37,17 @@ bool yy_is_italic = false;
   return VERBATIM_END;
 }
 
-<VERBATIM>.* {
+<VERBATIM>[ \n]+ {
+  yylval.str = strdup(yytext);
+  return CODE;
+}
+
+<VERBATIM>[^ \\\n]+ {
+  yylval.str = strdup(yytext);
+  return CODE;
+}
+
+<VERBATIM>[\\]+ {
   yylval.str = strdup(yytext);
   return CODE;
 }
