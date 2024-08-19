@@ -6,6 +6,8 @@
 bool yy_is_bold = false;
 bool yy_is_italic = false;
 
+int href_braces;
+
 %}
 /* States declarations */
 %x PREAMBLE
@@ -13,6 +15,7 @@ bool yy_is_italic = false;
 %x BOLD
 %x ITALICS
 %x VERBATIM
+%X HYPERLINK
 %%
 
 "\\begin{document}"[ \n]* {
@@ -25,6 +28,46 @@ bool yy_is_italic = false;
 <BODY>[ \n]*"\\end{document}" {
   yy_pop_state();
   return END_DOC;
+}
+
+<*>"\\href" {
+  yy_push_state(HYPERLINK);
+  href_braces = 4;
+  return HYPER_LINK;
+}
+
+<HYPERLINK>"{" {
+  --href_braces;
+  char empty[] = "";
+  yylval.str = strdup(empty);
+  if(href_braces >= 2){
+    return HREF_LINK;
+  } else{
+    return HREF_TEXT;
+  }
+} 
+
+<HYPERLINK>[^{}]+ {
+  yylval.str = strdup(yytext);
+  if(href_braces == 3){
+    return HREF_LINK;
+  } else if(href_braces == 1){
+    return HREF_TEXT;
+  }
+}
+
+<HYPERLINK>"}" {
+  --href_braces;
+  char empty[] = "";
+  yylval.str = strdup(empty);
+  if(href_braces == 0){
+    yy_pop_state();
+  }
+  if(href_braces >= 2){
+    return HREF_LINK;
+  } else{
+    return HREF_TEXT;
+  }
 }
 
 <BODY>[ \n]*"\\begin{verbatim}"[\n]? {

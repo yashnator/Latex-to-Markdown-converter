@@ -25,7 +25,8 @@ void yyerror(const char* msg) {
 %token <node> BEGIN_DOC END_DOC
 %token <node> BOLD_START ITALICS_START BOLD_END ITALICS_END
 %token <node> VERBATIM_START VERBATIM_END
-%token <str> WORD CODE SPACE EOL
+%token <node> HYPER_LINK
+%token <str> WORD CODE SPACE HREF_TEXT HREF_LINK EOL
 %token <str> HRULE PAR
 
 %type <node> doc_body doc_element
@@ -34,6 +35,7 @@ void yyerror(const char* msg) {
 %type <node> text_element
 %type <node> text bold_text italics_text
 %type <node> raw_bold_text raw_italics_text
+%type <node> href_link
 %type <str> raw_text
 %%
 
@@ -51,7 +53,7 @@ doc_body: BEGIN_DOC {
  }
  ;
 
-doc_element: text_element | code_block;
+doc_element: text_element | code_block | href_link;
 
 text_element: bold_text | italics_text | text ;
 
@@ -88,6 +90,29 @@ code_block: VERBATIM_START { $$ = create_node(verbatim_t); }
  | code_block VERBATIM_END {
     $$ = $1;
  }
+
+/* HYPER LINKS */
+
+href_link: HYPER_LINK { $$ = create_node(href_t); }
+ | href_link HREF_LINK {
+    if(strlen($2) != 0){
+        struct node_h* link_child = create_node(text_t, $2);
+        add_child($1, link_child);
+        $$ = $1;
+    } else{
+        $$ = $1;
+    }
+ };
+ | href_link HREF_TEXT {
+    if(strlen($2) != 0){
+        struct node_h* link_child = create_node(text_t, $2);
+        add_child($1, link_child);
+        $$ = $1;
+    } else{
+        $$ = $1;
+    }
+ }
+ ;
 
 /* Raw text strings */
 

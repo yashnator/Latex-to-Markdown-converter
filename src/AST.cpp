@@ -44,6 +44,17 @@ void eval(std::ofstream &md_file, struct node_h* node){
         md_file << "```\n";
         return;
     }
+    if(node->curr_type == href_t){
+        std::cout << "here" << std::endl;
+
+        md_file << '[';
+        eval(md_file, node->children[1]);
+        md_file << ']';
+        md_file << '(';
+        eval(md_file, node->children[0]);
+        md_file << ')';
+        return;
+    }
     if(node->curr_type == text_t){
         md_file << node->value;
     }
