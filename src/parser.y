@@ -26,7 +26,9 @@ void yyerror(const char* msg) {
 %token <node> BOLD_START ITALICS_START BOLD_END ITALICS_END
 %token <node> VERBATIM_START VERBATIM_END
 %token <node> HYPER_LINK
+%token <node> IMAGE
 %token <str> WORD CODE SPACE HREF_TEXT HREF_LINK EOL
+%token <str> IMAGE_PATH
 %token <str> HRULE PAR
 
 %type <node> doc_body doc_element
@@ -36,6 +38,7 @@ void yyerror(const char* msg) {
 %type <node> text bold_text italics_text
 %type <node> raw_bold_text raw_italics_text
 %type <node> href_link
+%type <node> image_element
 %type <str> raw_text
 %%
 
@@ -53,7 +56,7 @@ doc_body: BEGIN_DOC {
  }
  ;
 
-doc_element: text_element | code_block | href_link;
+doc_element: text_element | code_block | href_link | image_element;
 
 text_element: bold_text | italics_text | text ;
 
@@ -104,6 +107,20 @@ href_link: HYPER_LINK { $$ = create_node(href_t); }
     }
  };
  | href_link HREF_TEXT {
+    if(strlen($2) != 0){
+        struct node_h* link_child = create_node(text_t, $2);
+        add_child($1, link_child);
+        $$ = $1;
+    } else{
+        $$ = $1;
+    }
+ }
+ ;
+
+/* IMAGE ELEMENT */
+
+image_element: IMAGE { $$ = create_node(image_t); }
+ | image_element IMAGE_PATH {
     if(strlen($2) != 0){
         struct node_h* link_child = create_node(text_t, $2);
         add_child($1, link_child);

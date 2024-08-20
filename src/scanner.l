@@ -7,6 +7,7 @@ bool yy_is_bold = false;
 bool yy_is_italic = false;
 
 int href_braces;
+int image_braces;
 
 %}
 /* States declarations */
@@ -15,7 +16,8 @@ int href_braces;
 %x BOLD
 %x ITALICS
 %x VERBATIM
-%X HYPERLINK
+%x HYPERLINK
+%x IMAGELINK
 %%
 
 "\\begin{document}"[ \n]* {
@@ -36,6 +38,12 @@ int href_braces;
   return HYPER_LINK;
 }
 
+<*>"\\includegraphics" {
+  yy_push_state(IMAGELINK);
+  image_braces = 4;
+  return IMAGE;
+}
+
 <HYPERLINK>"{" {
   --href_braces;
   char empty[] = "";
@@ -47,6 +55,13 @@ int href_braces;
   }
 } 
 
+<IMAGELINK>"\["|"\{" {
+  --image_braces;
+  char empty[] = "";
+  yylval.str = strdup(empty);
+  return IMAGE_PATH;
+}
+
 <HYPERLINK>[^{}]+ {
   yylval.str = strdup(yytext);
   if(href_braces == 3){
@@ -54,6 +69,11 @@ int href_braces;
   } else if(href_braces == 1){
     return HREF_TEXT;
   }
+}
+
+<IMAGELINK>[^\[\]{}]* {
+  yylval.str = strdup(yytext);
+  return IMAGE_PATH;
 }
 
 <HYPERLINK>"}" {
@@ -68,6 +88,16 @@ int href_braces;
   } else{
     return HREF_TEXT;
   }
+}
+
+<IMAGELINK>("}"|"\]") {
+  --image_braces;
+  char empty[] = "";
+  yylval.str = strdup(empty);
+  if(image_braces == 0){
+    yy_pop_state();
+  }
+  return IMAGE_PATH;
 }
 
 <BODY>[ \n]*"\\begin{verbatim}"[\n]? {

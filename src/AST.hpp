@@ -11,7 +11,8 @@ enum node_type_t{
     bold_text_t,
     italics_text_t,
     verbatim_t,
-    href_t
+    href_t,
+    image_t
 };
 
 struct node_h{
