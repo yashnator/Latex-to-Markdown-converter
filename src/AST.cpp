@@ -59,6 +59,15 @@ void eval(std::ofstream &md_file, struct node_h* node){
         md_file << ')';
         return;
     }
+    if(node->curr_type == section_t){
+        md_file << '\n' <<  "# ";
+    }
+    if(node->curr_type == subsection_t){
+        md_file << '\n' << "## ";
+    }
+    if(node->curr_type == subsubsection_t){
+        md_file << '\n' << "### ";
+    }
     if(node->curr_type == text_t){
         md_file << node->value;
     }
@@ -74,5 +83,14 @@ void eval(std::ofstream &md_file, struct node_h* node){
         md_file << "**";
     } else if(node->curr_type == italics_text_t){
         md_file << "*";
+    }
+    if(node->curr_type == section_t){
+        md_file << '\n';
+    }
+    if(node->curr_type == subsection_t){
+        md_file << '\n';
+    }
+    if(node->curr_type == subsubsection_t){
+        md_file << '\n';
     }
 }

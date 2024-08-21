@@ -8,6 +8,7 @@ bool yy_is_italic = false;
 
 int href_braces;
 int image_braces;
+int section_braces;
 
 %}
 /* States declarations */
@@ -18,6 +19,7 @@ int image_braces;
 %x VERBATIM
 %x HYPERLINK
 %x IMAGELINK
+%x SECTION_ANY
 %%
 
 "\\begin{document}"[ \n]* {
@@ -42,6 +44,39 @@ int image_braces;
   yy_push_state(IMAGELINK);
   image_braces = 4;
   return IMAGE;
+}
+
+<*>"\\section" {
+  section_braces = 2;
+  yy_push_state(SECTION_ANY);
+  return SECTION;
+}
+
+<*>"\\subsection" {
+  section_braces = 2;
+  yy_push_state(SECTION_ANY);
+  return SUBSECTION;
+}
+
+<*>"\\subsubsection" {
+  section_braces = 2;
+  yy_push_state(SECTION_ANY);
+  return SUBSUBSECTION;
+}
+
+<SECTION_ANY>"{"|"}" {
+  --section_braces;
+  if(section_braces == 0){
+    yy_pop_state();
+  }
+  char empty[] = "";
+  yylval.str = strdup(empty);
+  return SECTION_TEXT;
+}
+
+<SECTION_ANY>[^{}]+ {
+  yylval.str = strdup(yytext);
+  return SECTION_TEXT;
 }
 
 <HYPERLINK>"{" {

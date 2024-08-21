@@ -27,9 +27,11 @@ void yyerror(const char* msg) {
 %token <node> VERBATIM_START VERBATIM_END
 %token <node> HYPER_LINK
 %token <node> IMAGE
+%token <node> SECTION SUBSECTION SUBSUBSECTION
 %token <str> WORD CODE SPACE HREF_TEXT HREF_LINK EOL
 %token <str> IMAGE_PATH
 %token <str> HRULE PAR
+%token <str> SECTION_TEXT
 
 %type <node> doc_body doc_element
 
@@ -39,6 +41,7 @@ void yyerror(const char* msg) {
 %type <node> raw_bold_text raw_italics_text
 %type <node> href_link
 %type <node> image_element
+%type <node> section_type_element
 %type <str> raw_text
 %%
 
@@ -56,9 +59,29 @@ doc_body: BEGIN_DOC {
  }
  ;
 
-doc_element: text_element | code_block | href_link | image_element;
+doc_element: text_element 
+ | code_block 
+ | href_link 
+ | image_element
+ ;
 
-text_element: bold_text | italics_text | text ;
+text_element: bold_text | italics_text | text | section_type_element;
+
+/* Sections, subsections, subsubsections */
+
+section_type_element: SECTION { $$ = create_node(section_t); }
+ | SUBSECTION { $$ = create_node(subsection_t); }
+ | SUBSUBSECTION { $$ = create_node(subsubsection_t); }
+ | section_type_element SECTION_TEXT {
+    if(strlen($2) != 0){
+        struct node_h* text_child = create_node(text_t, $2);
+        add_child($1, text_child);
+        $$ = $1;
+    } else{
+        $$ = $1;
+    }
+ }
+ ;
 
 /* TEXT */ 
 text: raw_text { $$ = create_node(text_t, $1); }

@@ -12,7 +12,10 @@ enum node_type_t{
     italics_text_t,
     verbatim_t,
     href_t,
-    image_t
+    image_t,
+    section_t,
+    subsection_t,
+    subsubsection_t
 };
 
 struct node_h{
