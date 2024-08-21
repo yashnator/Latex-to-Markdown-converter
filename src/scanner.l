@@ -107,7 +107,12 @@ int section_braces;
 }
 
 <IMAGELINK>[^\[\]{}]* {
-  yylval.str = strdup(yytext);
+  if(image_braces <= 2){
+    yylval.str = strdup(yytext);
+  } else{
+    char empty[] = "";
+    yylval.str = strdup(empty);
+  }
   return IMAGE_PATH;
 }
 
