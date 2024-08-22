@@ -32,4 +32,6 @@ void add_text(struct node_h* node, char* str);
 void eval_root(char* fname, struct node_h* root);
 void eval(std::ofstream &md_file, struct node_h* node);
 
+char* prepend(char* s, const char* t);
+
 #endif

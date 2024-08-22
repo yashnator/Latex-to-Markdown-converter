@@ -1,17 +1,43 @@
+/**
+ * @file lexer.l
+ * @brief Flex lexer for parsing a custom Markdown-like language with LaTeX commands.
+ * 
+ * This file defines the lexical analysis for parsing a Markdown-like language that includes
+ * LaTeX-style commands for document structure, text formatting, hyperlinks, images, and more.
+ */
+
 %option noyywrap stack
 %{
 #include "parser.tab.h"
 #include "src/AST.hpp"
 
+/**
+ * @brief Tracks whether the lexer is currently inside bold text.
+ */
 bool yy_is_bold = false;
+
+/**
+ * @brief Tracks whether the lexer is currently inside italic text.
+ */
 bool yy_is_italic = false;
 
+/**
+ * @brief Counter for tracking nested braces in hyperlinks.
+ */
 int href_braces;
+
+/**
+ * @brief Counter for tracking nested braces in image links.
+ */
 int image_braces;
+
+/**
+ * @brief Counter for tracking nested braces in section headers.
+ */
 int section_braces;
 
 %}
-/* States declarations */
+/* State declarations for different contexts */
 %x PREAMBLE
 %x BODY
 %x BOLD
@@ -23,6 +49,9 @@ int section_braces;
 %%
 
 "\\begin{document}"[ \n]* {
+  /**
+  * @brief Match the beginning of the document.
+  */
   yy_push_state(BODY);
   yy_is_bold = false;
   yy_is_italic = false;
@@ -30,41 +59,62 @@ int section_braces;
 }
 
 <BODY>[ \n]*"\\end{document}" {
+  /**
+  * @brief Match the end of the document.
+  */
   yy_pop_state();
   return END_DOC;
 }
 
 <*>"\\href" {
+  /**
+  * @brief Match the beginning of a hyperlink command.
+  */
   yy_push_state(HYPERLINK);
   href_braces = 4;
   return HYPER_LINK;
 }
 
 <*>"\\includegraphics" {
+  /**
+  * @brief Match the beginning of an image inclusion command.
+  */
   yy_push_state(IMAGELINK);
   image_braces = 4;
   return IMAGE;
 }
 
 <*>"\\section" {
+  /**
+  * @brief Match the beginning of a section header command.
+  */
   section_braces = 2;
   yy_push_state(SECTION_ANY);
   return SECTION;
 }
 
 <*>"\\subsection" {
+  /**
+  * @brief Match the beginning of a subsection header command.
+  */
   section_braces = 2;
   yy_push_state(SECTION_ANY);
   return SUBSECTION;
 }
 
 <*>"\\subsubsection" {
+  /**
+  * @brief Match the beginning of a subsubsection header command.
+  */
   section_braces = 2;
   yy_push_state(SECTION_ANY);
   return SUBSUBSECTION;
 }
 
 <SECTION_ANY>"{"|"}" {
+  /**
+  * @brief Handle opening and closing braces in section headers.
+  */
   --section_braces;
   if(section_braces == 0){
     yy_pop_state();
@@ -75,11 +125,17 @@ int section_braces;
 }
 
 <SECTION_ANY>[^{}]+ {
+  /**
+  * @brief Match text content inside section headers.
+  */
   yylval.str = strdup(yytext);
   return SECTION_TEXT;
 }
 
 <HYPERLINK>"{" {
+  /**
+  * @brief Handle opening braces in hyperlink commands.
+  */
   --href_braces;
   char empty[] = "";
   yylval.str = strdup(empty);
@@ -91,6 +147,9 @@ int section_braces;
 } 
 
 <IMAGELINK>"\["|"\{" {
+  /**
+  * @brief Handle opening braces in image link commands.
+  */
   --image_braces;
   char empty[] = "";
   yylval.str = strdup(empty);
@@ -98,6 +157,9 @@ int section_braces;
 }
 
 <HYPERLINK>[^{}]+ {
+  /**
+  * @brief Match text content inside hyperlink commands.
+  */
   yylval.str = strdup(yytext);
   if(href_braces == 3){
     return HREF_LINK;
@@ -107,6 +169,9 @@ int section_braces;
 }
 
 <IMAGELINK>[^\[\]{}]* {
+  /**
+  * @brief Match text content inside image link commands.
+  */
   if(image_braces <= 2){
     yylval.str = strdup(yytext);
   } else{
@@ -117,6 +182,9 @@ int section_braces;
 }
 
 <HYPERLINK>"}" {
+  /**
+  * @brief Handle closing braces in hyperlink commands.
+  */
   --href_braces;
   char empty[] = "";
   yylval.str = strdup(empty);
@@ -131,6 +199,9 @@ int section_braces;
 }
 
 <IMAGELINK>("}"|"\]") {
+  /**
+  * @brief Handle closing braces in image link commands.
+  */
   --image_braces;
   char empty[] = "";
   yylval.str = strdup(empty);
@@ -141,84 +212,129 @@ int section_braces;
 }
 
 <BODY>[ \n]*"\\begin{verbatim}"[\n]? {
+  /**
+  * @brief Match the beginning of a verbatim block.
+  */
   yy_push_state(VERBATIM);
   return VERBATIM_START;
 }
 
 <VERBATIM>"\\end{verbatim}"[ \n]* {
+  /**
+  * @brief Match the end of a verbatim block.
+  */
   yy_pop_state();
   return VERBATIM_END;
 }
 
 <VERBATIM>[ \n]+ {
+  /**
+  * @brief Match whitespace inside a verbatim block.
+  */
   yylval.str = strdup(yytext);
   return CODE;
 }
 
 <VERBATIM>[^ \\\n]+ {
+  /**
+  * @brief Match non-whitespace characters inside a verbatim block.
+  */
   yylval.str = strdup(yytext);
   return CODE;
 }
 
 <VERBATIM>[\\]+ {
+  /**
+  * @brief Match backslashes inside a verbatim block.
+  */
   yylval.str = strdup(yytext);
   return CODE;
 }
 
 <VERBATIM>\n {
+  /**
+  * @brief Match newlines inside a verbatim block.
+  */
   char nl[] = "\n";
   yylval.str = strdup(nl);
   return CODE;
 }
 
 <BODY,BOLD,ITALICS>"\\textbf\{"[ \n]* {
+  /**
+  * @brief Match the beginning of a bold text block.
+  */
   if(!yy_is_bold) yy_push_state(BOLD);
   yy_is_bold = true;
   return BOLD_START;
 }
 
 <BODY,BOLD,ITALICS>"\\textit\{"[ \n]* {
+  /**
+  * @brief Match the beginning of an italic text block.
+  */
   if(!yy_is_italic) yy_push_state(ITALICS);
   yy_is_italic = true;
   return ITALICS_START;
 }
 
 <BOLD>[ \n]*"}" {
+  /**
+  * @brief Match the end of a bold text block.
+  */
   yy_is_bold = false;
   yy_pop_state();
   return BOLD_END;
 }
 
 <ITALICS>[ \n]*"}" {
+  /**
+  * @brief Match the end of an italic text block.
+  */
   yy_is_italic = false;
   yy_pop_state();
   return ITALICS_END;
 }
 
 <BODY,BOLD,ITALICS>([^ \\\n\}]+) {
+  /**
+  * @brief Match words inside bold or italic blocks or regular text.
+  */
   yylval.str = strdup(yytext);
   return WORD;
 };
 
 <BODY>[ ]*[\n]{2,}[ ]* {
+  /**
+  * @brief Match multiple newlines, typically used as paragraph breaks.
+  */
   char nl[] = "\n\n";
   yylval.str = strdup(nl);
   return EOL;
 }
 
 <*>[ \n]*"\\hrule"[ \n] {
+  /**
+  * @brief Match horizontal rules.
+  */
   char rule[] = "\n\n---\n\n";
   yylval.str = strdup(rule);
   return HRULE;
 }
 
 <*>[ \n]*"\\par"[ \n] {
+  /**
+  * @brief Match paragraph breaks.
+  */
   char rule[] = "\n\n";
   yylval.str = strdup(rule);
   return PAR;
 }
 
 <BODY,BOLD,ITALICS>[ ]*[\n]{0,1}[ ]* {
+  /**
+  * @brief Match single spaces.
+  */
   char sp[] = " ";
   yylval.str = strdup(sp);
   return SPACE;

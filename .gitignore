@@ -3,3 +3,6 @@ main.out
 parser.tab.c
 parser.tab.h
 output.md
+latex
+html
+.DS_Store
