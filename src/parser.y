@@ -218,5 +218,5 @@ raw_text: WORD
 int main(int argc, char **argv)
 {
     yyparse();
-    eval_root("output.md", latex_root);
+    eval_root(argv[1], latex_root);
 }

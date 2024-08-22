@@ -6,3 +6,5 @@ output.md
 latex
 html
 .DS_Store
+googletest-release-1.8.0
+test
