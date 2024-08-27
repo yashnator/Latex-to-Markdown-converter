@@ -11,6 +11,8 @@
 #include "parser.tab.h"
 #include "src/AST.hpp"
 
+int list_idx = 0;
+
 /**
  * @brief Tracks whether the lexer is currently inside bold text.
  */
@@ -46,9 +48,11 @@ int section_braces;
 %x HYPERLINK
 %x IMAGELINK
 %x SECTION_ANY
+%x ULIST 
+%x OLIST
 %%
 
-"\\begin{document}"[ \n]* {
+<INITIAL>(.|\n)*"\\begin{document}"[ \n]* {
   /**
   * @brief Match the beginning of the document.
   */
@@ -130,6 +134,55 @@ int section_braces;
   */
   yylval.str = strdup(yytext);
   return SECTION_TEXT;
+}
+
+<*>"\\begin{itemize}"[ \n]* {
+  ++list_idx;
+  char empty[] = "";
+  yylval.str = strdup(empty);
+  yy_push_state(ULIST);
+  return LIST_TEXT;
+}
+
+<*>[ \n]*"\\end{itemize}" {
+  --list_idx;
+  char empty[] = "";
+  yylval.str = strdup(empty);
+  yy_pop_state();
+  return LIST_TEXT;
+}
+
+<*>"\\begin{enumerate}"[ \n]* {
+  ++list_idx;
+  char empty[] = "";
+  yylval.str = strdup(empty);
+  yy_push_state(OLIST);
+  return LIST_TEXT;
+}
+
+<*>[ \n]*"\\end{enumerate}" {
+  --list_idx;
+  char empty[] = "";
+  yylval.str = strdup(empty);
+  yy_pop_state();
+  return LIST_TEXT;
+}
+
+<*>[ \n]*"\\item"[ \n]* {
+  char s[] = "\n";
+  for(int i = 1; i < list_idx; ++i){
+    char tab[] = "\t";
+    strcat(s, tab);
+  }
+  if(YYSTATE == 10){
+    char it[] = "1. ";
+    strcat(s, it);
+  } else{
+    char it[] = "- ";
+    strcat(s, it);
+  }
+  yylval.str = strdup(s);
+  return LIST_TEXT;
 }
 
 <HYPERLINK>"{" {
@@ -296,11 +349,14 @@ int section_braces;
   return ITALICS_END;
 }
 
-<BODY,BOLD,ITALICS>([^ \\\n\}]+) {
+<BODY,BOLD,ITALICS,ULIST,OLIST>([^ \\\n\}]+) {
   /**
   * @brief Match words inside bold or italic blocks or regular text.
   */
   yylval.str = strdup(yytext);
+  if(YYSTATE == 9 || YYSTATE == 10) {
+    return LIST_TEXT;
+  }
   return WORD;
 };
 
@@ -331,12 +387,15 @@ int section_braces;
   return PAR;
 }
 
-<BODY,BOLD,ITALICS>[ ]*[\n]{0,1}[ ]* {
+<BODY,BOLD,ITALICS,ULIST,OLIST>[ ]*[\n]{0,1}[ ]* {
   /**
   * @brief Match single spaces.
   */
   char sp[] = " ";
   yylval.str = strdup(sp);
+  if(YYSTATE == 9 || YYSTATE == 10) {
+    return LIST_TEXT;
+  }
   return SPACE;
 }
 

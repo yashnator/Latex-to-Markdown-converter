@@ -35,7 +35,7 @@ void yyerror(const char* msg) {
 %token <node> HYPER_LINK
 %token <node> IMAGE
 %token <node> SECTION SUBSECTION SUBSUBSECTION
-%token <str> WORD CODE SPACE HREF_TEXT HREF_LINK EOL
+%token <str> WORD LIST_TEXT CODE SPACE HREF_TEXT HREF_LINK EOL
 %token <str> IMAGE_PATH
 %token <str> HRULE PAR
 %token <str> SECTION_TEXT
@@ -80,6 +80,7 @@ doc_element: text_element
  | code_block 
  | href_link 
  | image_element
+ | LIST_TEXT { $$ = create_node(text_t, $1); }
  ;
 
 /**
