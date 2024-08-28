@@ -80,7 +80,7 @@ doc_element: text_element
  | code_block 
  | href_link 
  | image_element
- | LIST_TEXT { $$ = create_node(text_t, $1); }
+ | LIST_TEXT { $$ = create_node(list_t, $1); }
  ;
 
 /**

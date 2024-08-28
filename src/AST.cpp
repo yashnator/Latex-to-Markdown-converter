@@ -115,7 +115,7 @@ void eval(std::ofstream &md_file, struct node_h* node){
     if(node->curr_type == subsubsection_t){
         md_file << '\n' << "### ";
     }
-    if(node->curr_type == text_t){
+    if(node->curr_type == text_t || node->curr_type == list_t){
         md_file << node->value;
     }
     else if(node->curr_type == bold_text_t){

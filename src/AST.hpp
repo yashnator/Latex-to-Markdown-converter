@@ -15,7 +15,8 @@ enum node_type_t{
     image_t,
     section_t,
     subsection_t,
-    subsubsection_t
+    subsubsection_t,
+    list_t
 };
 
 struct node_h{
